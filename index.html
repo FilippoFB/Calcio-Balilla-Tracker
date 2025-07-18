@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Poli Balilla Tracker</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="scripts/app.js" defer></script>
+  <script src="scripts/stats.js" defer></script>
+  <script src="scripts/ui.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>Poli Balilla Tracker</h1>
+  </header>
+  <main>
+    <section>
+      <h2>Inserisci nuova partita</h2>
+      <form id="match-form">
+        <div class="form-row">
+          <label for="rosso_att">Attaccante Rosso</label>
+          <select id="rosso_att" required>
+            <option value="">Seleziona...</option>
+            <option>D'Angelo Angelo</option>
+            <option>Bonaccorso Hadrien</option>
+            <option>Ceresoli Luca</option>
+            <option>Di Donato Marco</option>
+            <option>Fusar Bassini Filippo</option>
+            <option>Zagheni Marco</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="rosso_dif">Difensore Rosso</label>
+          <select id="rosso_dif" required>
+            <option value="">Seleziona...</option>
+            <option>Bonaccorso Hadrien</option>
+            <option>Ceresoli Luca</option>
+            <option>D'Angelo Angelo</option>
+            <option>Di Donato Marco</option>
+            <option>Fusar Bassini Filippo</option>
+            <option>Zagheni Marco</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="blu_att">Attaccante Blu</label>
+          <select id="blu_att" required>
+            <option value="">Seleziona...</option>
+            <option>Bonaccorso Hadrien</option>
+            <option>Ceresoli Luca</option>
+            <option>D'Angelo Angelo</option>
+            <option>Di Donato Marco</option>
+            <option>Fusar Bassini Filippo</option>
+            <option>Zagheni Marco</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="blu_dif">Difensore Blu</label>
+          <select id="blu_dif" required>
+            <option value="">Seleziona...</option>
+            <option>Bonaccorso Hadrien</option>
+            <option>Ceresoli Luca</option>
+            <option>D'Angelo Angelo</option>
+            <option>Di Donato Marco</option>
+            <option>Fusar Bassini Filippo</option>
+            <option>Zagheni Marco</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="gol_rosso">Gol Rosso</label>
+          <select id="gol_rosso" required>
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="gol_blu">Gol Blu</label>
+          <select id="gol_blu" required>
+           <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+        <button type="submit">Salva partita</button>
+      </form>
+    </section>
+    <section id="stats-section">
+      <h2>Statistiche</h2>
+      <div id="stats-display"></div>
+    </section>
+    <section id="matches-section">
+      <h2>Partite Salvate</h2>
+      <ul id="matches-list"></ul>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2025 Poli Balilla Tracker</p>
+  </footer>
+</body>
+</html>
