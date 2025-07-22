@@ -33,7 +33,8 @@ form.addEventListener('submit', async (e) => {
   try {
     await db.collection('matches').add(data);
     alert('Partita salvata!');
-    form.reset();
+    form.gol_rosso.value = 0;
+    form.gol_blu.value = 0;
     updateStatistics();
   } catch (error) {
     alert('Errore: ' + error.message);
@@ -62,3 +63,35 @@ function displayStatistics(totalMatches, averageGoals) {
     <p>Media gol per partita: ${averageGoals}</p>
   `;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Scambia colori squadre
+  document.getElementById('swap-colors-btn').onclick = () => {
+    // Salva valori attuali
+    const rossoAtt = document.getElementById('rosso_att').value;
+    const rossoDif = document.getElementById('rosso_dif').value;
+    const bluAtt = document.getElementById('blu_att').value;
+    const bluDif = document.getElementById('blu_dif').value;
+    // Scambia
+    document.getElementById('rosso_att').value = bluAtt;
+    document.getElementById('rosso_dif').value = bluDif;
+    document.getElementById('blu_att').value = rossoAtt;
+    document.getElementById('blu_dif').value = rossoDif;
+  };
+
+  // Scambia ruoli Rosso
+  document.getElementById('swap-rosso-btn').onclick = () => {
+    const att = document.getElementById('rosso_att').value;
+    const dif = document.getElementById('rosso_dif').value;
+    document.getElementById('rosso_att').value = dif;
+    document.getElementById('rosso_dif').value = att;
+  };
+
+  // Scambia ruoli Blu
+  document.getElementById('swap-blu-btn').onclick = () => {
+    const att = document.getElementById('blu_att').value;
+    const dif = document.getElementById('blu_dif').value;
+    document.getElementById('blu_att').value = dif;
+    document.getElementById('blu_dif').value = att;
+  };
+});
