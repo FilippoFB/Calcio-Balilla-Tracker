@@ -185,3 +185,77 @@ select {
     font-size: 1.1em;
   }
 }
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+  margin-top: 1em;
+}
+.pagination-controls button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.swap-controls {
+  display: flex;
+  gap: 0.5em;
+  margin-bottom: 0;
+}
+.swap-controls button {
+  background: #eee;
+  color: #333;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  padding: 0.4em 0.8em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.swap-controls button:hover {
+  background: #ddd;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  margin-bottom: 1em;
+}
+.form-header h2 {
+  margin: 0;
+  text-align: left;
+  font-size: 1.3em;
+}
+@media (max-width: 600px) {
+  .form-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5em;
+  }
+  .form-header h2 {
+    text-align: center;
+  }
+  .swap-controls {
+    justify-content: center;
+  }
+}
+
+.swap-rosso {
+  background: #ffeaea;
+  color: #b71c1c;
+  border: 1px solid #d32f2f22;
+}
+.swap-rosso:hover {
+  background: #ffd6d6;
+}
+
+.swap-blu {
+  background: #eaf1ff;
+  color: #0d47a1;
+  border: 1px solid #1976d222;
+}
+.swap-blu:hover {
+  background: #d6e6ff;
+}
