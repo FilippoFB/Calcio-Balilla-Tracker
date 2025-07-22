@@ -1,53 +1,75 @@
-# Poli Balilla Tracker
+# Tracker Calcio Balilla
 
-## Overview
-The Poli Balilla Tracker is a web application designed to track and analyze matches of the Poli Balilla game. It allows users to input match data, which is then stored in Firebase Firestore. The application provides statistical analysis of the match data, enhancing the user experience with a dynamic interface.
+## Descrizione
 
-## Features
-- **Match Data Entry**: Users can enter details of each match, including players and scores.
-- **Firebase Integration**: All match data is stored in Firebase Firestore for easy access and management.
-- **Statistical Analysis**: The application calculates and displays various statistics, such as win/loss ratios and average goals per match.
-- **User Interface Enhancements**: The UI is designed to be user-friendly, with dynamic updates based on user interactions.
+Il Tracker Calcio Balilla è una web app per registrare, gestire e analizzare le partite di calcio balilla. I dati vengono salvati su Firebase Firestore e l’interfaccia offre statistiche avanzate, grafici, gestione giocatori e funzioni di estrazione casuale delle squadre.
 
-## Project Structure
+## Funzionalità principali
+
+- **Inserimento Partite**: Form intuitivo per inserire i dati delle partite (giocatori, ruoli, gol), con selezione rapida dei nomi da lista aggiornata automaticamente.
+- **Gestione Giocatori**: Lista dei giocatori sempre aggiornata, possibilità di aggiungere nuovi partecipanti e selezionare chi è presente per la giornata.
+- **Estrazione Squadre**: Estrazione casuale delle squadre e dei ruoli tra i presenti, con gestione automatica delle riserve (anche "volante" se dispari).
+- **Swap Rapido**: Pulsanti per scambiare ruoli tra attaccante/difensore e per invertire i colori delle squadre nel form di inserimento.
+- **Storico Partite con Paginazione**: Visualizzazione delle partite salvate in tabelle paginabili, ogni pagina mostra le partite degli ultimi 5 giorni.
+- **Statistiche Avanzate**:
+  - Classifica giocatori con ranking, vittorie/sconfitte in attacco/difesa, percentuali e partite giocate.
+  - Classifica squadre (coppie di giocatori e ruoli) per numero di vittorie.
+  - Grafici dinamici (torta, barre) sulle statistiche principali.
+- **Tema Responsive e Automatico**: Interfaccia adattiva per PC e smartphone, con supporto automatico a tema chiaro/scuro in base alle impostazioni del dispositivo.
+
+## Struttura del progetto
+
 ```
-poli-balilla-tracker
-├── src
-│   ├── index.html          # Main HTML document for the application
-│   ├── styles
-│   │   └── main.css       # CSS styles for the application
-│   ├── scripts
-│   │   ├── app.js         # Main JavaScript logic for handling form submissions
-│   │   ├── stats.js       # JavaScript for statistical analysis of match data
-│   │   └── ui.js          # JavaScript for user interface enhancements
-│   └── assets
-│       └── favicon.ico     # Favicon for the web application
-├── package.json            # Configuration file for npm
-└── README.md               # Documentation for the project
+calcio-balilla-tracker
+├── assets
+│       └── favicon.ico   # Icona dell'app
+├── scripts
+│   ├── app.js            # Logica per inserimento e salvataggio partite
+│   ├── stats.js          # Analisi statistiche e grafici
+│   ├── ui.js             # Gestione interfaccia e paginazione storico
+│   └── teams.js          # Gestione giocatori e estrazione squadre
+├── styles
+│   └── main.css          # Stili CSS
+├── index.html            # Pagina principale dell'applicazione
+└── README.md             # Documentazione
 ```
 
-## Installation
-1. Clone the repository:
-   ```
+## Installazione e utilizzo (opzionale)
+
+1. **Clona il repository:**
+
+   ```sh
+
    git clone <repository-url>
    ```
-2. Navigate to the project directory:
+
+2. **Vai nella cartella del progetto:**
+
+   ```sh
+   cd calcio-balilla-tracker
    ```
-   cd poli-balilla-tracker
-   ```
-3. Install the necessary dependencies:
-   ```
+
+3. **(Opzionale) Installa le dipendenze:**
+
+   ```sh
    npm install
    ```
 
-## Usage
-1. Open `src/index.html` in a web browser.
-2. Fill out the match form with the required details.
-3. Click "Salva partita" to save the match data.
-4. View statistics and match history as they are dynamically updated.
+4. **Avvio locale:**
+   - Apri `src/index.html` con un browser **tramite un server locale** (es. Live Server di VS Code o `python -m http.server`).
+   - Inserisci le partite, gestisci i giocatori, visualizza statistiche e storico.
 
-## Contributing
-Contributions are welcome! Please feel free to submit a pull request or open an issue for any suggestions or improvements.
+## Note tecniche
 
-## License
-This project is licensed under the MIT License. See the LICENSE file for more details.
+- **Firebase**: Configura le tue chiavi Firebase in `app.js` per abilitare il salvataggio dati.
+- **Grafici**: I grafici sono realizzati con [Chart.js](https://www.chartjs.org/).
+- **Mobile friendly**: L’interfaccia si adatta automaticamente a smartphone e tablet.
+- **Dati persistenti**: I giocatori aggiunti vengono salvati in locale e sincronizzati con i form.
+
+## Contribuire
+
+Contributi, suggerimenti e segnalazioni sono benvenuti! Apri una issue o una pull request.
+
+## Licenza
+
+Questo progetto è distribuito con licenza MIT. Vedi il file LICENSE per dettagli.
