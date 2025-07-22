@@ -8,6 +8,7 @@
   <script src="scripts/app.js" defer></script>
   <script src="scripts/stats.js" defer></script>
   <script src="scripts/ui.js" defer></script>
+  <script src="scripts/teams.js" defer></script>
 </head>
 <body>
   <header>
@@ -107,6 +108,20 @@
     <section id="matches-section">
       <h2>Partite Salvate</h2>
       <ul id="matches-list"></ul>
+    </section>
+    <section class="squadre-panel">
+      <h2>Gestione Giocatori & Estrazione Squadre</h2>
+      <form id="players-form">
+        <div id="players-list">
+          <!-- Qui verrà generata la lista dei giocatori con checkbox -->
+        </div>
+        <div class="add-player-row">
+          <input type="text" id="new-player-name" placeholder="Aggiungi nuovo giocatore..." />
+          <button type="button" id="add-player-btn">Aggiungi</button>
+        </div>
+        <button type="button" id="draw-teams-btn">Estrai Squadre</button>
+      </form>
+      <div id="teams-result"></div>
     </section>
   </main>
   <footer>
