@@ -259,3 +259,9 @@ select {
 .swap-blu:hover {
   background: #d6e6ff;
 }
+
+.info-cambio {
+  margin: 0.5em 0 1em 0;
+  font-style: italic;
+  color: #555;
+}
