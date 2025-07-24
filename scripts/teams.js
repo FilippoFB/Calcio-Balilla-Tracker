@@ -41,43 +41,82 @@ function addPlayer(name) {
 function drawTeams() {
   const checked = Array.from(document.querySelectorAll('.player-checkbox:checked')).map(cb => cb.value);
   const resultDiv = document.getElementById('teams-result');
-  if (checked.length < 4) {
+  const n = checked.length;
+  if (n < 4) {
     resultDiv.innerHTML = "<p>Servono almeno 4 giocatori!</p>";
     return;
   }
   // Mischia i giocatori
   const shuffled = checked.sort(() => Math.random() - 0.5);
-  // Squadre titolari
-  const rosso = { att: shuffled[0], dif: shuffled[1] };
-  const blu = { att: shuffled[2], dif: shuffled[3] };
-  // Riserve
-  const reserves = shuffled.slice(4);
-  let reservesHtml = "";
-  if (reserves.length > 0) {
-    reservesHtml = "<h4>Riserve:</h4><ul>";
-    reserves.forEach((name, idx) => {
-      if (reserves.length % 2 === 1 && idx === reserves.length - 1) {
-        reservesHtml += `<li><strong>${name}</strong> (volante)</li>`;
-      } else {
-        const team = idx % 2 === 0 ? "Rosso" : "Blu";
-        reservesHtml += `<li><strong>${name}</strong> (${team})</li>`;
-      }
-    });
-    reservesHtml += "</ul>";
+
+  let html = "";
+  let idx = 0;
+
+  // Funzione per stampare una squadra
+  function printSquadra(nome, att, dif, colore) {
+    return `
+      <h4>Squadra${colore ? ` <span class="${colore.toLowerCase()}">${colore.toUpperCase()}</span>` : " NEUTRA"}</h4>
+      <ul>
+        <li>Attaccante: <strong>${att}</strong></li>
+        <li>Difensore: <strong>${dif}</strong></li>
+      </ul>
+    `;
   }
-  resultDiv.innerHTML = `
-    <h4>Squadra <span class="rosso">ROSSO</span></h4>
-    <ul>
-      <li>Attaccante: <strong>${rosso.att}</strong></li>
-      <li>Difensore: <strong>${rosso.dif}</strong></li>
-    </ul>
-    <h4>Squadra <span class="blu">BLU</span></h4>
-    <ul>
-      <li>Attaccante: <strong>${blu.att}</strong></li>
-      <li>Difensore: <strong>${blu.dif}</strong></li>
-    </ul>
-    ${reservesHtml}
-  `;
+
+  // 4 giocatori: 2 squadre
+  if (n === 4) {
+    html += printSquadra("Rosso", shuffled[0], shuffled[1], "Rosso");
+    html += printSquadra("Blu", shuffled[2], shuffled[3], "Blu");
+  }
+  // 5 giocatori: 2 squadre + riserva volante
+  else if (n === 5) {
+    html += printSquadra("Rosso", shuffled[0], shuffled[1], "Rosso");
+    html += printSquadra("Blu", shuffled[2], shuffled[3], "Blu");
+    html += `<h4>Riserva: <strong>${shuffled[4]}</strong> (volante)</h4>`;
+  }
+  // 6 giocatori: 2 squadre + squadra neutra
+  else if (n === 6) {
+    html += printSquadra("Rosso", shuffled[0], shuffled[1], "Rosso");
+    html += printSquadra("Blu", shuffled[2], shuffled[3], "Blu");
+    html += printSquadra("Neutra", shuffled[4], shuffled[5], null);
+    html += `<div class="info-cambio">La squadra neutra darà il cambio a quella perdente.</div>`;
+  }
+  // 7 giocatori: 2 squadre + squadra neutra + riserva volante
+  else if (n === 7) {
+    html += printSquadra("Rosso", shuffled[0], shuffled[1], "Rosso");
+    html += printSquadra("Blu", shuffled[2], shuffled[3], "Blu");
+    html += printSquadra("Neutra", shuffled[4], shuffled[5], null);
+    html += `<div class="info-cambio">La squadra neutra darà il cambio a quella perdente.</div>`;
+    html += `<h4>Riserva: <strong>${shuffled[6]}</strong> (volante)</h4>`;
+  }
+  // 8 o più giocatori: 4 squadre (2 rosse, 2 blu), eventuali riserve e squadre neutre
+  else {
+    // Quante squadre complete da 2 giocatori?
+    const numSquadre = Math.floor(n / 2);
+    // Le prime 4 squadre sono "rosse" e "blu" alternate
+    let colori = ["Rosso", "Rosso", "Blu", "Blu"];
+    let squadre = [];
+    for (let i = 0; i < Math.min(numSquadre, 4); i++) {
+      squadre.push(printSquadra(colori[i], shuffled[i * 2], shuffled[i * 2 + 1], colori[i]));
+    }
+    html += squadre.join("");
+    // Se ci sono altre squadre (oltre le prime 4), sono "neutre"
+    for (let i = 4; i < numSquadre; i++) {
+      html += printSquadra("Neutra", shuffled[i * 2], shuffled[i * 2 + 1], null);
+    }
+    // Info cambio
+    if (numSquadre > 2) {
+      html += `<div class="info-cambio">Le squadre si daranno il cambio a rotazione.`;
+      if (numSquadre > 4) html += ` Le squadre neutre danno il cambio a rotazione casuale.`;
+      html += `</div>`;
+    }
+    // Se dispari, ultima riserva volante
+    if (n % 2 === 1) {
+      html += `<h4>Riserva: <strong>${shuffled[n - 1]}</strong> (volante)</h4>`;
+    }
+  }
+
+  resultDiv.innerHTML = html;
 }
 
 function updatePlayerSelects() {
