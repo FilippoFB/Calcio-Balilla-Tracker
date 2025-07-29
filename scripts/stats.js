@@ -216,9 +216,19 @@ async function displayStatistics() {
         punteggio: (a, b) => b.score - a.score
     };
 
-    // Calcola punteggio per giocatori e squadre
-    playerStatsArray.forEach(p => { p.score = p.win * p.tot; });
-    teamsArray.forEach(t => { t.score = t.win * (t.win + t.loss); });
+    // Calcola punteggio per giocatori e squadre con la nuova formula:
+    // Punteggio = (((Vittorie - Sconfitte) / Partite giocate) * Math.log(Partite giocate + 1))*1000
+    playerStatsArray.forEach(p => {
+        p.score = p.tot > 0
+            ? Math.round((((p.win - p.loss) / p.tot) * Math.log(p.tot + 1)) * 1000)
+            : 0;
+    });
+    teamsArray.forEach(t => {
+        const tot = t.win + t.loss;
+        t.score = tot > 0
+            ? Math.round((((t.win - t.loss) / tot) * Math.log(tot + 1)) * 1000)
+            : 0;
+    });
 
     // Dropdown per ordinamento
     const playerSortSelect = `
