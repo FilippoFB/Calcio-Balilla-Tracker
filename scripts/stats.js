@@ -226,7 +226,7 @@ async function displayStatistics() {
             <select id="player-sort">
                 <option value="percentuale">Percentuale vittorie</option>
                 <option value="vittorie">Numero vittorie</option>
-                <option value="punteggio">Punteggio</option>
+                <option value="punteggio" selected>Punteggio</option>
             </select>
         </label>
     `;
@@ -235,16 +235,14 @@ async function displayStatistics() {
             <select id="team-sort">
                 <option value="percentuale">Percentuale vittorie</option>
                 <option value="vittorie">Numero vittorie</option>
-                <option value="punteggio">Punteggio</option>
+                <option value="punteggio" selected>Punteggio</option>
             </select>
         </label>
     `;
 
     // Funzione per generare la tabella giocatori
-    function renderPlayerTable(sortKey = "percentuale") {
-        // Ordina
+    function renderPlayerTable(sortKey = "punteggio") { // <-- default punteggio
         playerStatsArray.sort(playerSorters[sortKey]);
-        // Ranking condiviso
         let lastValue = null, lastRank = 1;
         playerStatsArray.forEach((p, idx) => {
             let value = sortKey === "percentuale" ? p.winPerc : sortKey === "vittorie" ? p.win : p.score;
@@ -287,7 +285,7 @@ async function displayStatistics() {
     }
 
     // Funzione per generare la tabella squadre
-    function renderTeamTable(sortKey = "percentuale") {
+    function renderTeamTable(sortKey = "punteggio") { // <-- default punteggio
         teamsArray.sort(teamSorters[sortKey]);
         let lastValue = null, lastRank = 1;
         teamsArray.forEach((t, idx) => {
