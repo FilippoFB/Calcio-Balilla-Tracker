@@ -204,15 +204,152 @@ async function displayStatistics() {
         </table>
     `;
 
+    // Funzioni di ordinamento
+    const playerSorters = {
+        vittorie: (a, b) => b.win - a.win,
+        percentuale: (a, b) => b.winPerc - a.winPerc,
+        punteggio: (a, b) => b.score - a.score
+    };
+    const teamSorters = {
+        vittorie: (a, b) => b.win - a.win,
+        percentuale: (a, b) => b.perc - a.perc,
+        punteggio: (a, b) => b.score - a.score
+    };
+
+    // Calcola punteggio per giocatori e squadre
+    playerStatsArray.forEach(p => { p.score = p.win * p.tot; });
+    teamsArray.forEach(t => { t.score = t.win * (t.win + t.loss); });
+
+    // Dropdown per ordinamento
+    const playerSortSelect = `
+        <label>Ordina giocatori per:
+            <select id="player-sort">
+                <option value="percentuale">Percentuale vittorie</option>
+                <option value="vittorie">Numero vittorie</option>
+                <option value="punteggio">Punteggio</option>
+            </select>
+        </label>
+    `;
+    const teamSortSelect = `
+        <label>Ordina squadre per:
+            <select id="team-sort">
+                <option value="percentuale">Percentuale vittorie</option>
+                <option value="vittorie">Numero vittorie</option>
+                <option value="punteggio">Punteggio</option>
+            </select>
+        </label>
+    `;
+
+    // Funzione per generare la tabella giocatori
+    function renderPlayerTable(sortKey = "percentuale") {
+        // Ordina
+        playerStatsArray.sort(playerSorters[sortKey]);
+        // Ranking condiviso
+        let lastValue = null, lastRank = 1;
+        playerStatsArray.forEach((p, idx) => {
+            let value = sortKey === "percentuale" ? p.winPerc : sortKey === "vittorie" ? p.win : p.score;
+            if (lastValue === null || value !== lastValue) {
+                lastRank = idx + 1;
+                lastValue = value;
+            }
+            p.rank = lastRank;
+        });
+        // Tabella
+        return `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ranking</th>
+                        <th>Giocatore</th>
+                        <th>Attacco V/S</th>
+                        <th>Difesa V/S</th>
+                        <th>Partite giocate</th>
+                        <th>% Vittorie</th>
+                        <th>Punteggio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${playerStatsArray.map(p => {
+                        const color = medalColors[p.rank] ? `style="color:${medalColors[p.rank]};font-weight:bold"` : '';
+                        return `<tr>
+                            <td ${color}>${p.rank}</td>
+                            <td ${color}>${p.player}</td>
+                            <td ${color}>${p.attWin} / ${p.attLoss}</td>
+                            <td ${color}>${p.difWin} / ${p.difLoss}</td>
+                            <td ${color}>${p.tot}</td>
+                            <td ${color}>${p.winPerc.toFixed(1)}%</td>
+                            <td ${color}>${p.score}</td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    // Funzione per generare la tabella squadre
+    function renderTeamTable(sortKey = "percentuale") {
+        teamsArray.sort(teamSorters[sortKey]);
+        let lastValue = null, lastRank = 1;
+        teamsArray.forEach((t, idx) => {
+            let value = sortKey === "percentuale" ? t.perc : sortKey === "vittorie" ? t.win : t.score;
+            if (lastValue === null || value !== lastValue) {
+                lastRank = idx + 1;
+                lastValue = value;
+            }
+            t.rank = lastRank;
+        });
+        return `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ranking</th>
+                        <th>Squadra (Attaccante & Difensore)</th>
+                        <th>Vittorie</th>
+                        <th>Sconfitte</th>
+                        <th>Partite giocate</th>
+                        <th>% Vittorie</th>
+                        <th>Punteggio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${teamsArray.map(t => {
+                        const color = medalColorsTeams[t.rank] ? `style="color:${medalColorsTeams[t.rank]};font-weight:bold"` : '';
+                        const tot = t.win + t.loss;
+                        return `<tr>
+                            <td ${color}>${t.rank}</td>
+                            <td ${color}>${t.team}</td>
+                            <td ${color}>${t.win}</td>
+                            <td ${color}>${t.loss}</td>
+                            <td ${color}>${tot}</td>
+                            <td ${color}>${t.perc.toFixed(1)}%</td>
+                            <td ${color}>${t.score}</td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    // Inserisci i dropdown e le tabelle nel DOM
     statsContainer.innerHTML = `
         <p><strong>Partite Totali:</strong> ${stats.totalMatches}</p>
         <p><strong class="rosso">Vittorie Rossi - Pro.File:</strong> ${stats.winsRosso}</p>
         <p><strong class="blu">Vittorie Blu - Teamcenter:</strong> ${stats.winsBlu}</p>
         <h3>Vittorie/Sconfitte per Giocatore</h3>
-        ${playerStatsTable}
+        ${playerSortSelect}
+        <div id="player-table-wrap">${renderPlayerTable()}</div>
         <h3>Classifica Squadre (combinazioni vincenti e perdenti)</h3>
-        ${teamStatsTable}
+        ${teamSortSelect}
+        <div id="team-table-wrap">${renderTeamTable()}</div>
     `;
+
+    // Eventi per i dropdown
+    document.getElementById('player-sort').addEventListener('change', e => {
+        document.getElementById('player-table-wrap').innerHTML = renderPlayerTable(e.target.value);
+    });
+    document.getElementById('team-sort').addEventListener('change', e => {
+        document.getElementById('team-table-wrap').innerHTML = renderTeamTable(e.target.value);
+    });
 }
 
 // Call displayStatistics when the page loads
