@@ -160,6 +160,16 @@ select {
   margin-bottom: 0.2em;
 }
 
+#player-sort,
+#team-sort {
+  margin-bottom: 1em;
+}
+
+#player-table-wrap,
+#team-table-wrap {
+  margin-top: 0.7em;
+}
+
 /* Responsive: su schermi piccoli (max 600px) il form va in colonna */
 @media (max-width: 600px) {
   .form-panel {
