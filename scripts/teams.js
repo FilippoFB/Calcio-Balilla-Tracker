@@ -1,154 +1,166 @@
-const DEFAULT_PLAYERS = [
+// Gestione giocatori, rendering checkbox e estrazione squadre (robusta)
+
+/* default interno solo se window.DEFAULT_PLAYERS non definito */
+const FALLBACK_DEFAULT_PLAYERS = [
   "Bonaccorso Hadrien",
   "Ceresoli Luca",
   "D'Angelo Angelo",
   "Di Donato Marco",
   "Fusar Bassini Filippo",
+  "Rossi Andrea",
   "Zagheni Marco"
 ];
 
 function getPlayers() {
-  return JSON.parse(localStorage.getItem('players') || '[]');
+  try {
+    const stored = JSON.parse(localStorage.getItem('players') || 'null');
+    if (Array.isArray(stored)) return stored.slice();
+    const defaults = Array.isArray(window.DEFAULT_PLAYERS) ? [...window.DEFAULT_PLAYERS] : [...FALLBACK_DEFAULT_PLAYERS];
+    localStorage.setItem('players', JSON.stringify(defaults));
+    return defaults;
+  } catch (e) {
+    console.error('getPlayers error', e);
+    return Array.isArray(window.DEFAULT_PLAYERS) ? [...window.DEFAULT_PLAYERS] : [...FALLBACK_DEFAULT_PLAYERS];
+  }
 }
 
-function setPlayers(players) {
-  localStorage.setItem('players', JSON.stringify(players));
+function setPlayers(list) {
+  if (!Array.isArray(list)) return;
+  localStorage.setItem('players', JSON.stringify(list));
+  if (typeof window.onPlayersUpdated === 'function') {
+    try { window.onPlayersUpdated(list); } catch (e) { console.error(e); }
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 function renderPlayersList() {
-  const players = getPlayers().length ? getPlayers() : DEFAULT_PLAYERS;
-  const listDiv = document.getElementById('players-list');
-  listDiv.innerHTML = players
-    .sort()
-    .map(name => `
-      <label>
-        <input type="checkbox" class="player-checkbox" value="${name}" checked>
-        ${name}
-      </label>
-    `).join('<br>');
-  updatePlayerSelects(); // <--- AGGIUNGI QUESTA RIGA
-}
-
-function addPlayer(name) {
-  let players = getPlayers();
-  if (!players.includes(name)) {
-    players.push(name);
-    setPlayers(players);
-    renderPlayersList();
-  }
+  const container = document.getElementById('players-list');
+  if (!container) return;
+  const players = getPlayers();
+  container.innerHTML = players.map(name => `
+    <label class="player-item">
+      <div class="player-left">
+        <input type="checkbox" class="player-checkbox" value="${escapeHtml(name)}" checked />
+        <span class="player-name">${escapeHtml(name)}</span>
+      </div>
+    </label>
+  `).join('');
 }
 
 function drawTeams() {
   const checked = Array.from(document.querySelectorAll('.player-checkbox:checked')).map(cb => cb.value);
-  const resultDiv = document.getElementById('teams-result');
+  const resultDiv = document.getElementById('teams-result') || document.createElement('div');
   const n = checked.length;
   if (n < 4) {
     resultDiv.innerHTML = "<p>Servono almeno 4 giocatori!</p>";
+    if (!document.getElementById('teams-result')) document.body.appendChild(resultDiv);
     return;
   }
-  // Mischia i giocatori
-  const shuffled = checked.sort(() => Math.random() - 0.5);
 
+  const shuffled = checked.slice().sort(() => Math.random() - 0.5);
   let html = "";
-  let idx = 0;
 
-  // Funzione per stampare una squadra
-  function printSquadra(nome, att, dif, colore) {
+  const cardStyle = `
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:flex-start;
+    gap:0.35rem;
+    box-sizing:border-box;
+    padding:0.8rem;
+    border-radius:8px;
+    background:#fff;
+    border:1px solid #eee;
+    flex: 0 1 calc(50% - 0.8rem);
+    max-width: calc(50% - 0.8rem);
+    min-width: 220px;
+    height:100px;
+    margin-top:1rem;
+  `;
+
+  const titleStyle = `margin:0 0 0.4em 0;font-size:1.05em;`;
+  const roleStyle = `margin:0;font-size:0.95em;`;
+
+  const printTeam = (title, att, dif, colore) => {
+    const colorStyle = colore
+      ? (colore.toLowerCase().includes('rosso') ? '#d32f2f' : (colore.toLowerCase().includes('blu') ? '#1976d2' : '#666'))
+      : '#000';
     return `
-      <h4>Squadra${colore ? ` <span class="${colore.toLowerCase()}">${colore.toUpperCase()}</span>` : " NEUTRA"}</h4>
-      <ul>
-        <li>Attaccante: <strong>${att}</strong></li>
-        <li>Difensore: <strong>${dif}</strong></li>
-      </ul>
+      <div class="team-card" style="${cardStyle}">
+        <h4 style="${titleStyle}color:${colorStyle};">${escapeHtml(title)}</h4>
+        <div style="${roleStyle}">Attaccante: <strong>${escapeHtml(att)}</strong></div>
+        <div style="${roleStyle}">Difensore: <strong>${escapeHtml(dif)}</strong></div>
+      </div>
+    `;
+  };
+
+  const numTeams = Math.floor(n / 2);
+
+  for (let i = 0; i < numTeams; i++) {
+    const att = shuffled[i * 2];
+    const dif = shuffled[i * 2 + 1];
+    let title, colore;
+    if (i === 0) { title = 'Squadra Rossa'; colore = 'Rosso'; }
+    else if (i === 1) { title = 'Squadra Blu'; colore = 'Blu'; }
+    else { title = 'Squadra Riserva'; colore = null; }
+    html += printTeam(title, att, dif, colore);
+  }
+
+  if (n % 2 === 1) {
+    const last = shuffled[n - 1];
+    html += `
+      <div class="team-card" style="${cardStyle}">
+        <h4 style="${titleStyle}color:#666;">Giocatore di Riserva</h4>
+        <div style="${roleStyle}">${escapeHtml(last)}</div>
+      </div>
     `;
   }
 
-  // 4 giocatori: 2 squadre
-  if (n === 4) {
-    html += printSquadra("Rosso", shuffled[0], shuffled[1], "Rosso");
-    html += printSquadra("Blu", shuffled[2], shuffled[3], "Blu");
-  }
-  // 5 giocatori: 2 squadre + riserva volante
-  else if (n === 5) {
-    html += printSquadra("Rosso", shuffled[0], shuffled[1], "Rosso");
-    html += printSquadra("Blu", shuffled[2], shuffled[3], "Blu");
-    html += `<h4>Riserva: <strong>${shuffled[4]}</strong> (volante)</h4>`;
-  }
-  // 6 giocatori: 2 squadre + squadra neutra
-  else if (n === 6) {
-    html += printSquadra("Rosso", shuffled[0], shuffled[1], "Rosso");
-    html += printSquadra("Blu", shuffled[2], shuffled[3], "Blu");
-    html += printSquadra("Neutra", shuffled[4], shuffled[5], null);
-    html += `<div class="info-cambio">La squadra neutra darà il cambio a quella perdente.</div>`;
-  }
-  // 7 giocatori: 2 squadre + squadra neutra + riserva volante
-  else if (n === 7) {
-    html += printSquadra("Rosso", shuffled[0], shuffled[1], "Rosso");
-    html += printSquadra("Blu", shuffled[2], shuffled[3], "Blu");
-    html += printSquadra("Neutra", shuffled[4], shuffled[5], null);
-    html += `<div class="info-cambio">La squadra neutra darà il cambio a quella perdente.</div>`;
-    html += `<h4>Riserva: <strong>${shuffled[6]}</strong> (volante)</h4>`;
-  }
-  // 8 o più giocatori: 4 squadre (2 rosse, 2 blu), eventuali riserve e squadre neutre
-  else {
-    // Quante squadre complete da 2 giocatori?
-    const numSquadre = Math.floor(n / 2);
-    // Le prime 4 squadre sono "rosse" e "blu" alternate
-    let colori = ["Rosso", "Rosso", "Blu", "Blu"];
-    let squadre = [];
-    for (let i = 0; i < Math.min(numSquadre, 4); i++) {
-      squadre.push(printSquadra(colori[i], shuffled[i * 2], shuffled[i * 2 + 1], colori[i]));
-    }
-    html += squadre.join("");
-    // Se ci sono altre squadre (oltre le prime 4), sono "neutre"
-    for (let i = 4; i < numSquadre; i++) {
-      html += printSquadra("Neutra", shuffled[i * 2], shuffled[i * 2 + 1], null);
-    }
-    // Info cambio
-    if (numSquadre > 2) {
-      html += `<div class="info-cambio">Le squadre si daranno il cambio a rotazione.`;
-      if (numSquadre > 4) html += ` Le squadre neutre danno il cambio a rotazione casuale.`;
-      html += `</div>`;
-    }
-    // Se dispari, ultima riserva volante
-    if (n % 2 === 1) {
-      html += `<h4>Riserva: <strong>${shuffled[n - 1]}</strong> (volante)</h4>`;
-    }
-  }
-
-  resultDiv.innerHTML = html;
+  resultDiv.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:0.8rem;align-items:flex-start;justify-content:center;margin-top:1rem;">${html}</div>`;
+  if (!document.getElementById('teams-result')) document.body.appendChild(resultDiv);
 }
 
-function updatePlayerSelects() {
-  const players = getPlayers().sort();
-  const selects = [
-    document.getElementById('rosso_att'),
-    document.getElementById('rosso_dif'),
-    document.getElementById('blu_att'),
-    document.getElementById('blu_dif')
-  ];
-  selects.forEach(select => {
-    if (!select) return;
-    // Salva il valore selezionato (se c'è)
-    const selected = select.value;
-    // Ricostruisci le opzioni
-    select.innerHTML = '<option value="">Seleziona...</option>' +
-      players.map(name => `<option${selected === name ? ' selected' : ''}>${name}</option>`).join('');
-  });
+// funzione per sincronizzare localStorage con players.js (defaults)
+function syncPlayersFromDefaults(overwrite = true) {
+  const defaults = Array.isArray(window.DEFAULT_PLAYERS) ? [...window.DEFAULT_PLAYERS] : [...FALLBACK_DEFAULT_PLAYERS];
+  if (!defaults.length) {
+    alert('Nessun DEFAULT_PLAYERS disponibile.');
+    return;
+  }
+  if (overwrite) {
+    if (!confirm('Sovrascrivere la lista giocatori salvata con quella presente in players.js?')) return;
+    setPlayers(defaults);
+  } else {
+    // merge: aggiunge solo i mancanti mantenendo l'ordine salvato
+    const current = getPlayers();
+    defaults.forEach(n => { if (!current.includes(n)) current.push(n); });
+    setPlayers(current);
+  }
+  renderPlayersList();
+  if (typeof window.updatePlayerSelects === 'function') window.updatePlayerSelects();
+  alert('Lista giocatori sincronizzata.');
 }
 
+// rendi disponibile globalmente se necessario
+window.syncPlayersFromDefaults = syncPlayersFromDefaults;
+
+/* Esponi funzioni necessarie */
+window.getPlayers = getPlayers;
+window.setPlayers = setPlayers;
+window.renderPlayersList = renderPlayersList;
+window.drawTeams = drawTeams;
+
+/* Collegamenti DOM: solo rendering e bind per estrazione */
 document.addEventListener('DOMContentLoaded', () => {
-  // Inizializza lista giocatori
-  if (!getPlayers().length) setPlayers(DEFAULT_PLAYERS);
   renderPlayersList();
 
-  document.getElementById('add-player-btn').onclick = () => {
-    const name = document.getElementById('new-player-name').value.trim();
-    if (name) {
-      addPlayer(name);
-      document.getElementById('new-player-name').value = "";
-    }
-  };
+  const drawBtn = document.getElementById('draw-teams-btn');
+  if (drawBtn) drawBtn.addEventListener('click', drawTeams);
 
-  document.getElementById('draw-teams-btn').onclick = drawTeams;
+  // collega il pulsante di sincronizzazione (se presente nel DOM)
+  const syncBtn = document.getElementById('sync-players-btn');
+  if (syncBtn) syncBtn.addEventListener('click', () => syncPlayersFromDefaults(true));
 });
