@@ -2,9 +2,11 @@
 // It includes functions to calculate and display statistics such as win/loss ratios, average goals per match, and other relevant metrics.
 
 // Function to calculate win/loss ratios and advanced statistics
-async function calculateStatistics() {
-    const matchesSnapshot = await db.collection('matches').get();
-    const matches = matchesSnapshot.docs.map(doc => doc.data());
+async function calculateStatistics(matches) {
+    if (!matches) {
+        const matchesSnapshot = await db.collection('matches').get();
+        matches = matchesSnapshot.docs.map(doc => doc.data());
+    }
 
     let totalMatches = matches.length;
     let winsRosso = 0;
@@ -59,8 +61,8 @@ async function calculateStatistics() {
 }
 
 // Function to display statistics on the UI
-async function displayStatistics() {
-    const stats = await calculateStatistics();
+async function displayStatistics(matches) {
+    const stats = await calculateStatistics(matches);
     const statsContainer = document.getElementById('stats-display');
     if (!statsContainer) return;
 
@@ -338,15 +340,24 @@ async function displayStatistics() {
         `;
     }
 
-    // Inserisci i dropdown e le tabelle nel DOM
+    // Inserisci i dropdown e le tabelle nel DOM + pulsante grafico + canvas nascosto
     statsContainer.innerHTML = `
         <p><strong>Partite Totali:</strong> ${stats.totalMatches}</p>
-        <p><strong class="rosso">Vittorie Rossi - Pro.File:</strong> ${stats.winsRosso}</p>
-        <p><strong class="blu">Vittorie Blu - Teamcenter:</strong> ${stats.winsBlu}</p>
+        <p><strong class="rosso">Vittorie Rossi:</strong> ${stats.winsRosso}</p>
+        <p><strong class="blu">Vittorie Blu:</strong> ${stats.winsBlu}</p>
         <h3>Vittorie/Sconfitte per Giocatore</h3>
         ${playerSortSelect}
         <div id="player-table-wrap">${renderPlayerTable()}</div>
-        <h3>Classifica Squadre (combinazioni vincenti e perdenti)</h3>
+
+        <div style="margin-top:0.8em;">
+          <button id="show-chart-btn" class="btn-primary" type="button">Mostra grafico</button>
+        </div>
+
+        <div id="players-chart-wrap" style="display:none;margin-top:1em;">
+          <canvas id="players-chart" style="width:100%;height:360px;"></canvas>
+        </div>
+
+        <h3 style="margin-top:1.6em;">Classifica Squadre (combinazioni vincenti e perdenti)</h3>
         ${teamSortSelect}
         <div id="team-table-wrap">${renderTeamTable()}</div>
     `;
@@ -358,6 +369,154 @@ async function displayStatistics() {
     document.getElementById('team-sort').addEventListener('change', e => {
         document.getElementById('team-table-wrap').innerHTML = renderTeamTable(e.target.value);
     });
+
+    // --- Grafico: costruzione dati e rendering Chart.js ---
+    // helper: ottiene lista di date (YYYY-MM-DD) ordinate asc e gruppa le partite per data
+    function groupMatchesByDate(matchesList) {
+      const map = new Map();
+      matchesList.slice().sort((a,b) => new Date(a.data_partita) - new Date(b.data_partita)).forEach(m => {
+        const d = (new Date(m.data_partita)).toISOString().split('T')[0];
+        if (!map.has(d)) map.set(d, []);
+        map.get(d).push(m);
+      });
+      return { dates: Array.from(map.keys()), byDate: map };
+    }
+
+    // costruisce serie cumulativa del "punteggio" per ciascun giocatore giorno per giorno
+    function buildPlayerTimeSeries(matchesList) {
+      const { dates, byDate } = groupMatchesByDate(matchesList);
+      // raccolgo tutti i giocatori apparsi nelle statistiche (o dalle match)
+      const playersSet = new Set();
+      matchesList.forEach(m => {
+        [m.rosso_att, m.rosso_dif, m.blu_att, m.blu_dif].forEach(p => { if (p) playersSet.add(p); });
+      });
+      const players = Array.from(playersSet).sort();
+
+      // accumulatore per ogni giocatore
+      const acc = {};
+      players.forEach(p => acc[p] = { attWin:0, attLoss:0, difWin:0, difLoss:0 });
+
+      // array per ogni player con valori giornalieri
+      const series = {};
+      players.forEach(p => series[p] = []);
+
+      // funzione di calcolo punteggio coerente con displayStatistics
+      function calcScore(obj) {
+        const attWin = obj.attWin || 0;
+        const attLoss = obj.attLoss || 0;
+        const difWin = obj.difWin || 0;
+        const difLoss = obj.difLoss || 0;
+        const win = attWin + difWin;
+        const loss = attLoss + difLoss;
+        const tot = win + loss;
+        return tot > 0 ? Math.round((((win - loss) / tot) * Math.log(tot + 1)) * 1000) : 0;
+      }
+
+      // itero le date in ordine asc e aggiorno accumulatori, poi calcolo score per ogni player
+      dates.forEach(date => {
+        const todays = byDate.get(date) || [];
+        todays.forEach(m => {
+          if (m.gol_rosso > m.gol_blu) {
+            // rossi vincono
+            acc[m.rosso_att].attWin++;
+            acc[m.rosso_dif].difWin++;
+            acc[m.blu_att].attLoss++;
+            acc[m.blu_dif].difLoss++;
+          } else if (m.gol_blu > m.gol_rosso) {
+            acc[m.blu_att].attWin++;
+            acc[m.blu_dif].difWin++;
+            acc[m.rosso_att].attLoss++;
+            acc[m.rosso_dif].difLoss++;
+          }
+          // pareggi non incidono (secondo logica esistente)
+        });
+        // dopo aggiornamenti del giorno, calcolo e push per tutti i player (se non hanno ancora partite, calcolo 0)
+        players.forEach(p => {
+          series[p].push(calcScore(acc[p]));
+        });
+      });
+
+      return { labels: dates, players, series };
+    }
+
+    let chartInstance = null;
+    function renderPlayersChart(matchesList) {
+      const ctx = document.getElementById('players-chart').getContext('2d');
+      const ts = buildPlayerTimeSeries(matchesList);
+      const palette = [
+        '#1976d2','#d32f2f','#ffa000','#388e3c','#7b1fa2','#f57c00','#1976d2','#455a64'
+      ];
+      const datasets = ts.players.map((p, idx) => ({
+        label: p,
+        data: ts.series[p],
+        borderColor: palette[idx % palette.length],
+        backgroundColor: palette[idx % palette.length] + '33',
+        fill: false,
+        tension: 0.15,
+        pointRadius: 2
+      }));
+
+      // distruggi chart precedente se esiste
+      if (chartInstance) {
+        try { chartInstance.destroy(); } catch(e){/*ignore*/ }
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ts.labels,
+          datasets
+        },
+        options: {
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          layout: { padding: { bottom: 28 } }, // spazio per le label ruotate
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'Data' },
+              ticks: {
+                maxRotation: 45,
+                minRotation: 45,
+                autoSkip: true
+              }
+            },
+            y: { title: { display: true, text: 'Punteggio (cumulativo)' }, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    // toggle sul pulsante
+    const btn = document.getElementById('show-chart-btn');
+    const wrap = document.getElementById('players-chart-wrap');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        if (!wrap) return;
+        if (wrap.style.display === 'none' || wrap.style.display === '') {
+          wrap.style.display = 'block';
+          // renderizza usando le partite passate alla funzione; se non sono state passate, ricava da DB
+          if (matches && matches.length) {
+            renderPlayersChart(matches);
+          } else {
+            // fetch matches from Firestore (async)
+            db.collection('matches').orderBy('data_partita', 'asc').get().then(snapshot => {
+              const all = snapshot.docs.map(d => d.data());
+              renderPlayersChart(all);
+            }).catch(err => console.error(err));
+          }
+          btn.textContent = 'Nascondi grafico';
+        } else {
+          wrap.style.display = 'none';
+          btn.textContent = 'Mostra grafico';
+        }
+      });
+    }
+
+    // ...rest of displayStatistics...
 }
 
 // Call displayStatistics when the page loads
