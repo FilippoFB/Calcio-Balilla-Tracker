@@ -463,18 +463,20 @@ summary::-webkit-details-marker { display: none; }
   }
 }
 
+/* Aumenta l'altezza del grafico player per evitare effetto "schiacciato" */
 #players-chart-wrap {
   width: 100%;
-  max-width: none;         /* rimuove il limite */
-  margin: 0.8em 0;         /* lascia solo spaziatura verticale */
+  max-width: none;
+  margin: 0.8em 0;
   box-sizing: border-box;
-  padding: 0;              /* evita padding che restringe il canvas */
+  padding: 0;
 }
 
+/* Altezza maggiore e responsiva del canvas */
 #players-chart {
   display: block;
-  width: 100% !important;  /* forza piena larghezza della sezione */
-  height: 360px !important;/* altezza fissa (o usare una % per responsività) */
+  width: 100% !important;
+  height: 640px !important; /* puoi diminuire/incrementare (es. 420px, 640px) */
 }
 
 /* Player / include list: vertical, full-width, consistent spacing */
@@ -567,3 +569,21 @@ summary::-webkit-details-marker { display: none; }
   .pagination { gap: 0.6rem; }
   .pagination .page-indicator { min-width: 6ch; font-size: 0.95em; }
 }
+
+/* Allinea verticalmente i controlli nella sezione "Comandi avanzati" */
+#advanced-commands details > div {
+  display: flex;
+  align-items: center; /* centra verticalmente i bottoni */
+  gap: 0.6rem;
+  padding: 1em 0; /* uniforma padding, override se inline-style diverso */
+  flex-wrap: wrap; /* si avvolgono su schermi piccoli */
+}
+
+/* Assicura che i bottoni abbiano la stessa baseline/altezza */
+#advanced-commands button {
+  vertical-align: middle;
+  line-height: 1;
+}
+
+/* se serve, riduci la differenza dovuta a margini inline */
+#advanced-commands button[style] { margin-left: 0 !important; }
