@@ -8,7 +8,8 @@ const FALLBACK_DEFAULT_PLAYERS = [
   "Di Donato Marco",
   "Fusar Bassini Filippo",
   "Rossi Andrea",
-  "Zagheni Marco"
+  "Zagheni Marco",
+  "Basilico Federico"
 ];
 
 function getPlayers() {
