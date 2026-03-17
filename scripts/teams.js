@@ -9,7 +9,8 @@ const FALLBACK_DEFAULT_PLAYERS = [
   "Fusar Bassini Filippo",
   "Rossi Andrea",
   "Zagheni Marco",
-  "Basilico Federico"
+  "Basilico Federico",
+  "Ottone Erminio"
 ];
 
 function getPlayers() {
