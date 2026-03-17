@@ -7,5 +7,6 @@ window.DEFAULT_PLAYERS = [
   "Fusar Bassini Filippo",
   "Rossi Andrea",
   "Zagheni Marco",
-  "Basilico Federico"
+  "Basilico Federico",
+  "Ottone Erminio"
 ];
