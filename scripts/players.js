@@ -8,5 +8,6 @@ window.DEFAULT_PLAYERS = [
   "Rossi Andrea",
   "Zagheni Marco",
   "Basilico Federico",
+  "Gritti Matteo",
   "Ottone Erminio"
 ];
