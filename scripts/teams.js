@@ -11,6 +11,7 @@ const FALLBACK_DEFAULT_PLAYERS = [
   "Zagheni Marco",
   "Basilico Federico",
   "Gritti Matteo",
+  "Iuso Giorgio",
   "Ottone Erminio"
 ];
 
